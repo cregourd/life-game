@@ -1,4 +1,5 @@
 import { useReducer } from "react";
+import { Settings, useSettingsContext } from "./useSettingsContext";
 
 export enum ACTIONS {
   TOGGLE_CELL = 'TOGGLE_CELL',
@@ -38,7 +39,8 @@ const getNeighbors = (matrix: number[][]) => (rowIndex: number, colIndex: number
   return neighbors
 }
 
-const matrixReducer = (state: number[][], action: Action) => {
+const matrixReducer = ({ seed: { birth, survive } }: Settings) => (state: number[][], action: Action) => {
+
   switch (action.type) {
     case 'TOGGLE_CELL':
       return state.map((row, rowIndex) =>
@@ -52,9 +54,9 @@ const matrixReducer = (state: number[][], action: Action) => {
       return state.map((row, rowIndex) =>
         row.map((cell, cellIndex) => {
           const neighbors = getNeighbors(state)(rowIndex, cellIndex);
-          if (cell === 0 && neighbors === 3) {
+          if (cell === 0 && (neighbors >= birth[0] && neighbors <= birth[1])) {
             return 1;
-          } else if (cell === 1 && (neighbors < 2 || neighbors > 3)) {
+          } else if (cell === 1 && (neighbors < survive[0] || neighbors > survive[1])) {
             return 0;
           } else {
             return cell;
@@ -70,5 +72,8 @@ const matrixReducer = (state: number[][], action: Action) => {
   }
 }
 
-const useMatrix = (x: number, y: number) => useReducer(matrixReducer, Array.from({ length: y }, () => Array.from({ length: x }, () => 0)))
+const useMatrix = (x: number, y: number) => {
+  const { settings } = useSettingsContext()
+  return useReducer(matrixReducer(settings), Array.from({ length: y }, () => Array.from({ length: x }, () => 0)))
+}
 export default useMatrix
